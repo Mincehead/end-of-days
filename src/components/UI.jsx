@@ -27,9 +27,24 @@ export const UI = () => {
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
             {/* Inventory / HUD */}
             <div style={{ position: 'absolute', top: 20, left: 20, color: 'white', fontFamily: 'monospace', textShadow: '1px 1px 2px black' }}>
-                <h3>STATUS</h3>
-                <p>HP: {useGameStore.getState().hp}</p>
-                <div style={{ marginTop: 10 }}>
+                <h3>SURVIVAL STATUS</h3>
+
+                <div style={{ marginBottom: 5 }}>HP: {Math.round(useGameStore.getState().hp)}</div>
+                <div style={{ width: 150, height: 10, background: '#333', marginBottom: 10 }}>
+                    <div style={{ width: `${useGameStore.getState().hp}%`, height: '100%', background: 'red' }} />
+                </div>
+
+                <div style={{ marginBottom: 5 }}>Hunger: {Math.round(useGameStore.getState().hunger)}</div>
+                <div style={{ width: 150, height: 10, background: '#333', marginBottom: 10 }}>
+                    <div style={{ width: `${useGameStore.getState().hunger}%`, height: '100%', background: 'orange' }} />
+                </div>
+
+                <div style={{ marginBottom: 5 }}>Thirst: {Math.round(useGameStore.getState().thirst)}</div>
+                <div style={{ width: 150, height: 10, background: '#333', marginBottom: 10 }}>
+                    <div style={{ width: `${useGameStore.getState().thirst}%`, height: '100%', background: 'cyan' }} />
+                </div>
+
+                <div style={{ marginTop: 20 }}>
                     <p>Scrap: {inventory.scrap}</p>
                     <p>Wood: {inventory.wood}</p>
                     <p>Water: {inventory.water}</p>

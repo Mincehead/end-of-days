@@ -3,6 +3,7 @@ import { usePlane } from '@react-three/cannon';
 import { ImprovedNoise } from 'three-stdlib';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameStore';
+import { Enemy } from './Enemy';
 
 // Simple Ground
 const Ground = () => {
@@ -97,6 +98,9 @@ export const World = () => {
             <Environment />
             <Resources />
             <BuildingGhosts />
+            {/* Spawn a few enemies */}
+            <Enemy position={[10, 2, 10]} />
+            <Enemy position={[-15, 2, -15]} />
         </group>
     );
 };

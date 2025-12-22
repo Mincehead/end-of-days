@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 
 const initialState = {
   hp: 100,
+  hunger: 100,
+  thirst: 100,
   isDead: false,
   inventory: {
     scrap: 0,
@@ -50,6 +52,30 @@ export const useGameStore = create((set) => ({
   addStructure: (position, type) => set((state) => ({
     structures: [...state.structures, { id: uuidv4(), position, type }]
   })),
+
+  // Game Loop
+  tick: () => set((state) => {
+    if (state.isDead) return {};
+
+    // Decay rates
+    let newHunger = Math.max(0, state.hunger - 0.05); // Adjust speed here
+    let newThirst = Math.max(0, state.thirst - 0.08);
+    let newHp = state.hp;
+
+    // Damage from starvation/dehydration
+    if (newHunger === 0 || newThirst === 0) {
+      newHp = Math.max(0, state.hp - 0.1);
+    }
+
+    return {
+      hunger: newHunger,
+      thirst: newThirst,
+      hp: newHp,
+      isDead: newHp === 0
+    };
+  }),
+
+  resetGame: () => set(initialState),
 
   // Persistence
   saveGame: async () => {

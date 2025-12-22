@@ -1,10 +1,19 @@
-import React, { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { Suspense, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics } from '@react-three/cannon';
 import { Sky, Stars } from '@react-three/drei';
 import { World } from './components/World';
 import { Player } from './components/Player';
 import { UI } from './components/UI';
+import { useGameStore } from './store/gameStore';
+
+const GameLoop = () => {
+  const tick = useGameStore(state => state.tick);
+  useFrame(() => {
+    tick();
+  });
+  return null;
+};
 
 function App() {
   return (
@@ -17,6 +26,8 @@ function App() {
 
         {/* Fog for atmosphere */}
         <fog attach="fog" args={['#202020', 5, 30]} />
+
+        <GameLoop />
 
         <Suspense fallback={null}>
           <Physics gravity={[0, -9.81, 0]}>
