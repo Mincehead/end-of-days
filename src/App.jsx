@@ -21,11 +21,12 @@ function App() {
       <Canvas shadows camera={{ fov: 60 }}>
         <Sky sunPosition={[0, 0, -1]} turbidity={20} rayleigh={2} mieCoefficient={0.05} mieDirectionalG={0.5} />
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-        <ambientLight intensity={0.05} />
+        <ambientLight intensity={0.2} />
         <pointLight position={[10, 10, 10]} intensity={0.5} castShadow />
+        <pointLight position={[-10, 10, -10]} intensity={0.2} />
 
         {/* Spooky Fog */}
-        <fog attach="fog" args={['#050505', 0, 15]} />
+        <fog attach="fog" args={['#101010', 0, 20]} />
 
         <GameLoop />
 

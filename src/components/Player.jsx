@@ -50,8 +50,11 @@ export const Player = () => {
         direction
             .subVectors(frontVector, sideVector)
             .normalize()
-            .multiplyScalar(5) // Speed
-            .applyEuler(camera.rotation);
+            .multiplyScalar(5); // Speed
+
+        // Apply only Y rotation (Yaw) to movement so looking down doesn't push us into the ground
+        const euler = new THREE.Euler(0, camera.rotation.y, 0, 'YXZ');
+        direction.applyEuler(euler);
 
         api.velocity.set(direction.x, velocity.current[1], direction.z);
 
