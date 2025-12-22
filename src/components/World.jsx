@@ -16,7 +16,7 @@ const Ground = () => {
     return (
         <mesh ref={ref} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[100, 100]} />
-            <meshStandardMaterial color="#4a4a4a" />
+            <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
         </mesh>
     );
 };

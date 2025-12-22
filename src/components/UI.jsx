@@ -124,6 +124,24 @@ export const UI = () => {
                 transform: 'translate(-50%, -50%)',
                 opacity: 0.5
             }} />
+
+            {/* Game Over Screen */}
+            {useGameStore.getState().isDead && (
+                <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.8)', color: 'red', display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', pointerEvents: 'auto', zIndex: 99
+                }}>
+                    <h1 style={{ fontSize: '4rem', fontFamily: 'monospace' }}>YOU DIED</h1>
+                    <button
+                        onClick={() => useGameStore.getState().resetGame()}
+                        style={{ padding: '20px 40px', fontSize: '1.5rem', background: 'white', border: 'none', cursor: 'pointer' }}
+                    >
+                        TRY AGAIN
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
+```
