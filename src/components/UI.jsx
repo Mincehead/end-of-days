@@ -50,6 +50,13 @@ export const UI = () => {
                     <p>Stone: {inventory.stone}</p>
                     <p>Water: {inventory.water}</p>
                 </div>
+
+                {/* Debug Input */}
+                <div style={{ marginTop: 20, fontSize: '0.8rem', color: '#aaa' }}>
+                    <p>Input X: {useInputStore.getState().move.x.toFixed(2)}</p>
+                    <p>Input Y: {useInputStore.getState().move.y.toFixed(2)}</p>
+                    <p>Time: {useGameStore.getState().time.toFixed(1)}</p>
+                </div>
             </div>
 
             {/* Build Menu - Centered Bottom */}
@@ -168,6 +175,16 @@ export const UI = () => {
                     </button>
                 </div>
             )}
+            {/* Controls Info */}
+            <div style={{
+                position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)',
+                color: 'rgba(255,255,255,0.7)', textAlign: 'center', pointerEvents: 'none',
+                background: 'rgba(0,0,0,0.3)', padding: '10px 20px', borderRadius: '20px'
+            }}>
+                <p style={{ margin: 0, fontWeight: 'bold' }}>CONTROLS</p>
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>WASD to Move | Click to Look</p>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#ffaaaa' }}>Press ESC to Unlock Mouse</p>
+            </div>
         </div>
     );
 };

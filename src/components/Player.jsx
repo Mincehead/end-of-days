@@ -14,7 +14,8 @@ export const Player = () => {
         position: [0, 5, 0],
         args: [1],
         fixedRotation: true,
-        linearDamping: 0.95 // Air resistance/friction substitute to stop sliding
+        linearDamping: 0.1, // Reduced friction to prevent sticky feeling
+        allowSleep: false   // Never sleep
     }));
 
     // State for velocity

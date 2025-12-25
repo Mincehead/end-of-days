@@ -5,61 +5,14 @@ export const KeyboardControls = () => {
     const { setMove, setLook, setAction } = useInputStore();
 
     useEffect(() => {
-        const handleKeyDown = (e) => {
-            switch (e.code) {
-                case 'KeyW': case 'ArrowUp':
-                    setMove(0, 1); // 1 is forward in our joystick mapping
-                    break;
-                case 'KeyS': case 'ArrowDown':
-                    setMove(0, -1);
-                    break;
-                case 'KeyA': case 'ArrowLeft':
-                    setMove(-1, 0);
-                    break;
-                case 'KeyD': case 'ArrowRight':
-                    setMove(1, 0);
-                    break;
-                case 'Space':
-                    setAction('jump', true);
-                    break;
-                case 'KeyF':
-                    setAction('attack', true);
-                    break;
-                case 'KeyE':
-                    setAction('build', true);
-                    break;
-            }
-        };
-
-        const handleKeyUp = (e) => {
-            switch (e.code) {
-                case 'KeyW': case 'ArrowUp':
-                case 'KeyS': case 'ArrowDown':
-                case 'KeyA': case 'ArrowLeft':
-                case 'KeyD': case 'ArrowRight':
-                    setMove(0, 0);
-                    break;
-                case 'Space':
-                    setAction('jump', false);
-                    break;
-                case 'KeyF':
-                    setAction('attack', false);
-                    break;
-                case 'KeyE':
-                    setAction('build', false);
-                    break;
-            }
-        };
-
-        // Note: Simple implementation - standard WASD logic usually tracks multiple keys held down
-        // to allow diagonal movement. For this rapid prototype, standard reset on key up is fine 
-        // but might feel "stuttery" if keys are mashed. 
-        // Improved logic for diagonals:
+        // Track state of keys
         const keys = { w: false, a: false, s: false, d: false };
 
         const handleKeys = (e, isDown) => {
             if (e.repeat) return;
             const code = e.code;
+
+            // Map keys
             if (code === 'KeyW' || code === 'ArrowUp') keys.w = isDown;
             if (code === 'KeyS' || code === 'ArrowDown') keys.s = isDown;
             if (code === 'KeyA' || code === 'ArrowLeft') keys.a = isDown;
@@ -75,10 +28,16 @@ export const KeyboardControls = () => {
 
             useInputStore.getState().setMove(x, y);
 
-            // Actions
-            if (code === 'Space') setAction('jump', isDown);
-            if (code === 'KeyF') setAction('attack', isDown); // Attack key
-            if (code === 'KeyE') setAction('build', isDown);  // Build key
+            // Actions (Trigger on Down)
+            if (isDown) {
+                if (code === 'Space') setAction('jump', true);
+                if (code === 'KeyF') setAction('attack', true);
+                if (code === 'KeyE') setAction('build', true);
+            } else {
+                if (code === 'Space') setAction('jump', false);
+                if (code === 'KeyF') setAction('attack', false);
+                if (code === 'KeyE') setAction('build', false);
+            }
         };
 
         const onDown = (e) => handleKeys(e, true);
