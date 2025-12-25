@@ -52,10 +52,12 @@ export const UI = () => {
                 </div>
 
                 {/* Debug Input */}
-                <div style={{ marginTop: 20, fontSize: '0.8rem', color: '#aaa' }}>
+                <div style={{ marginTop: 20, fontSize: '1.2rem', color: 'yellow', fontWeight: 'bold', background: 'rgba(0,0,0,0.5)', padding: 10 }}>
+                    <p>DEBUG MODE</p>
                     <p>Input X: {useInputStore.getState().move.x.toFixed(2)}</p>
                     <p>Input Y: {useInputStore.getState().move.y.toFixed(2)}</p>
                     <p>Time: {useGameStore.getState().time.toFixed(1)}</p>
+                    <p>FPS: {Math.round(1 / (useGameStore.getState().dt || 0.016))}</p>
                 </div>
             </div>
 
@@ -123,28 +125,18 @@ export const UI = () => {
                 <button onClick={() => useGameStore.getState().loadGame()} style={{ background: '#9b59b6', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px' }}>LOAD</button>
             </div>
 
-            {/* Joysticks */}
-            <div style={{ position: 'absolute', bottom: 40, left: 40, pointerEvents: 'auto' }}>
-                <Joystick
-                    size={100}
-                    stickSize={60}
-                    baseColor="rgba(255, 255, 255, 0.2)"
-                    stickColor="rgba(255, 255, 255, 0.5)"
-                    move={handleMove}
-                    stop={handleStopMove}
-                />
-            </div>
-
-            <div style={{ position: 'absolute', bottom: 40, right: 40, pointerEvents: 'auto' }}>
-                <Joystick
-                    size={100}
-                    stickSize={60}
-                    baseColor="rgba(255, 255, 255, 0.2)"
-                    stickColor="rgba(255, 255, 255, 0.5)"
-                    move={handleLook}
-                    stop={handleStopLook}
-                />
-            </div>
+            {/* Crosshair */}
+            <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: '10px',
+                height: '10px',
+                background: 'white',
+                borderRadius: '50%',
+                transform: 'translate(-50%, -50%)',
+                opacity: 0.5
+            }} />
 
             {/* Crosshair */}
             <div style={{

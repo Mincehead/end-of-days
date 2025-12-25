@@ -11,15 +11,16 @@ export const Player = () => {
     const [ref, api] = useSphere(() => ({
         mass: 60, // Human weight
         type: 'Dynamic',
-        position: [0, 5, 0],
+        position: [0, 10, 0], // Higher spawn to prevent ground clipping
         args: [1],
         fixedRotation: true,
-        linearDamping: 0.1, // Reduced friction to prevent sticky feeling
-        allowSleep: false   // Never sleep
+        linearDamping: 0, // No air friction for now
+        allowSleep: false
     }));
 
     // State for velocity
     const velocity = useRef([0, 0, 0]);
+    const cameraAngle = useRef(0); // Store Yaw angle independently
     useEffect(() => api.velocity.subscribe((v) => (velocity.current = v)), [api.velocity]);
 
     // Input - Read directly from store in loop for performance/freshness
@@ -35,29 +36,45 @@ export const Player = () => {
 
     useFrame(() => {
         // Read raw input
-        const { move, look } = useInputStore.getState();
+        const { move, look, actions } = useInputStore.getState();
 
-        // 1. Camera Look (Mobile Joystick - look.x rotates Y, look.y rotates X)
-        // Adjust sensitivity as needed
-        camera.rotation.y -= look.x * 0.05;
-        camera.rotation.x -= look.y * 0.05;
-        camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
+        // 1. Camera Input -> Update Angle State
+        cameraAngle.current -= look.x * 0.05;
 
-        // 2. Movement
-        frontVector.current.set(0, 0, -move.y); // Forward/Back
-        sideVector.current.set(-move.x, 0, 0);  // Left/Right (Inverted x for correct strafing)
+        // 2. ABSOLUTE Movement (Relative to Camera Angle)
+        direction.current.set(0, 0, 0);
+
+        if (move.y > 0) direction.current.z -= 1; // W
+        if (move.y < 0) direction.current.z += 1; // S
+        if (move.x < 0) direction.current.x -= 1; // A
+        if (move.x > 0) direction.current.x += 1; // D
 
         direction.current
-            .subVectors(frontVector.current, sideVector.current)
             .normalize()
-            .multiplyScalar(10) // Speed bumped to 10
-            .applyEuler(new THREE.Euler(0, camera.rotation.y, 0, 'YXZ'));
+            .multiplyScalar(10) // Speed
+            .applyEuler(new THREE.Euler(0, cameraAngle.current, 0, 'YXZ'));
 
-        api.velocity.set(direction.current.x, velocity.current[1], direction.current.z);
+        // Jump
+        if (actions.jump && Math.abs(velocity.current[1]) < 0.05) {
+            api.velocity.set(direction.current.x, 8, direction.current.z);
+        } else {
+            api.velocity.set(direction.current.x, velocity.current[1], direction.current.z);
+        }
 
-        // Sync Camera Position to Physics Body
-        camera.position.copy(ref.current.position);
-        camera.position.y += 1.5; // Eye height
+        // Sync Camera (Third Person)
+        const playerPos = ref.current.position;
+        // Offset: Up 2, Back 4
+        const offset = new Vector3(0, 3, 5);
+        // Rotate offset by camera's Yaw
+        offset.applyAxisAngle(new Vector3(0, 1, 0), cameraAngle.current);
+
+        // precise camera placement
+        const camPos = new Vector3().copy(playerPos).add(offset);
+        camera.position.lerp(camPos, 0.2); // Smooth follow
+
+        // Look at player
+        const target = new Vector3(playerPos.x, playerPos.y + 1, playerPos.z);
+        camera.lookAt(target);
     });
 
     // Handle Actions (Attack / Build / Gather)
@@ -81,8 +98,9 @@ export const Player = () => {
         if (actions.attack) {
             console.log("Attack Action Triggered");
 
-            // Raycast from camera center
-            raycaster.current.setFromCamera({ x: 0, y: 0 }, camera);
+            // Raycast from player center forward (using known angle)
+            const playerDir = new Vector3(0, 0, -1).applyEuler(new THREE.Euler(0, cameraAngle.current, 0));
+            raycaster.current.set(ref.current.position, playerDir);
 
             // Intersect with everything in scene
             const intersects = raycaster.current.intersectObjects(scene.children, true);
@@ -124,7 +142,7 @@ export const Player = () => {
     useEffect(() => {
         if (actions.build && isBuildMode) {
             // Calculate spawn position in front of player
-            const spawnPos = new Vector3(0, 0, -4).applyEuler(camera.rotation).add(camera.position); // Further out
+            const spawnPos = new Vector3(0, 0, -4).applyEuler(new THREE.Euler(0, cameraAngle.current, 0)).add(ref.current.position);
             // Snap to grid-ish
             const snapX = Math.round(spawnPos.x / 2) * 2;
             const snapZ = Math.round(spawnPos.z / 2) * 2;
@@ -136,6 +154,17 @@ export const Player = () => {
 
 
     return (
-        <mesh ref={ref} />
+        <group ref={ref}>
+            {/* Character Mesh */}
+            <mesh castShadow receiveShadow position={[0, 0.9, 0]}>
+                <capsuleGeometry args={[0.4, 1.8, 4, 16]} />
+                <meshStandardMaterial color="#00a8ff" roughness={0.3} />
+            </mesh>
+            {/* Eyes/Visor to show direction */}
+            <mesh position={[0, 1.5, -0.3]}>
+                <boxGeometry args={[0.5, 0.2, 0.2]} />
+                <meshStandardMaterial color="black" />
+            </mesh>
+        </group>
     );
 };
