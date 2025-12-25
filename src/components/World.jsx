@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { usePlane } from '@react-three/cannon';
-import { ImprovedNoise } from 'three-stdlib';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameStore';
 import { Enemy } from './Enemy';
@@ -55,89 +54,102 @@ const Trees = () => {
     );
 };
 
-// Procedural Shrubs
-const Shrubs = () => {
-    // Procedural Object Spawner
-    const ObjectSpawner = () => {
-        // Generate random positions once
-        const items = useMemo(() => {
-            const temp = [];
-            // Trees
-            for (let i = 0; i < 30; i++) {
-                const x = (Math.random() - 0.5) * 80;
-                const z = (Math.random() - 0.5) * 80;
-                temp.push({ id: `tree-${i}`, type: 'tree', position: [x, 0, z] });
-            }
-            // Rocks
-            for (let i = 0; i < 15; i++) {
-                const x = (Math.random() - 0.5) * 80;
-                const z = (Math.random() - 0.5) * 80;
-                temp.push({ id: `rock-${i}`, type: 'rock', position: [x, 0, z] });
-            }
-            // Scrap
-            for (let i = 0; i < 10; i++) {
-                const x = (Math.random() - 0.5) * 60;
-                const z = (Math.random() - 0.5) * 60;
-                temp.push({ id: `scrap-${i}`, type: 'scrap', position: [x, 0, z] });
-            }
-            return temp;
-        }, []);
+// Generic Collectable Item
+const Collectable = ({ type, position }) => {
+    let color = 'white';
+    if (type === 'tree') color = '#2d4c1e'; // Shouldn't happen if trees are separate, but fallback
+    if (type === 'rock') color = '#888';
+    if (type === 'scrap') color = '#cd7f32';
 
-        return (
-            <group>
-                {items.map((item) => (
-                    <Collectable key={item.id} type={item.type} position={item.position} />
-                ))}
-            </group>
-        );
-    };
+    return (
+        <mesh position={position} userData={{ type: 'resource', resourceType: type === 'rock' ? 'stone' : (type === 'tree' ? 'wood' : 'scrap') }} castShadow>
+            <boxGeometry args={[0.5, 0.5, 0.5]} />
+            <meshStandardMaterial color={color} />
+        </mesh>
+    )
+}
 
-    // Placed Structures
-    const Structures = () => {
-        const structures = useGameStore(state => state.structures);
+// Procedural Object Spawner (Rocks, Scrap)
+const ObjectSpawner = () => {
+    const items = useMemo(() => {
+        const temp = [];
+        // Rocks
+        for (let i = 0; i < 20; i++) {
+            const x = (Math.random() - 0.5) * 80;
+            const z = (Math.random() - 0.5) * 80;
+            temp.push({ id: `rock-${i}`, type: 'rock', position: [x, 0.5, z] });
+        }
+        // Scrap
+        for (let i = 0; i < 15; i++) {
+            const x = (Math.random() - 0.5) * 60;
+            const z = (Math.random() - 0.5) * 60;
+            temp.push({ id: `scrap-${i}`, type: 'scrap', position: [x, 0.5, z] });
+        }
+        return temp;
+    }, []);
 
-        return (
-            <group>
-                {structures.map((s) => {
-                    let geometry, positionOffset;
-                    // Simple primitives for structures
-                    if (s.type === 'wall') {
-                        return (
-                            <mesh key={s.id} position={[s.position[0], s.position[1] + 2, s.position[2]]} rotation={[0, s.rotation, 0]} castShadow receiveShadow>
-                                <boxGeometry args={[4, 4, 0.2]} />
-                                <meshStandardMaterial color="#8d6e63" />
-                            </mesh>
-                        );
-                    } else if (s.type === 'floor') {
-                        return (
-                            <mesh key={s.id} position={[s.position[0], s.position[1] + 0.1, s.position[2]]} rotation={[0, s.rotation, 0]} receiveShadow>
-                                <boxGeometry args={[4, 0.2, 4]} />
-                                <meshStandardMaterial color="#5d4037" />
-                            </mesh>
-                        );
-                    } else if (s.type === 'ramp') {
-                        return (
-                            <mesh key={s.id} position={[s.position[0], s.position[1] + 1, s.position[2]]} rotation={[Math.PI / 8, s.rotation, 0]} castShadow receiveShadow>
-                                <boxGeometry args={[4, 0.2, 5]} />
-                                <meshStandardMaterial color="#6d4c41" />
-                            </mesh>
-                        );
-                    }
-                    return null;
-                })}
-            </group>
-        )
-    }
+    return (
+        <group>
+            {items.map((item) => (
+                <Collectable key={item.id} type={item.type} position={item.position} />
+            ))}
+        </group>
+    );
+};
 
-    export const World = () => {
-        return (
-            <group>
-                <Ground />
-                <ObjectSpawner />
-                <Structures />
-                {/* Spawn a few enemies */}
-                <Enemy position={[10, 2, 10]} />
-                <Enemy position={[-15, 2, -15]} />
-            </group>
-        );
-    };
+// Placed Structures
+const Structures = () => {
+    const structures = useGameStore(state => state.structures);
+
+    return (
+        <group>
+            {structures.map((s) => {
+                // Simple primitives for structures
+                if (s.type === 'wall') {
+                    return (
+                        <mesh key={s.id} position={[s.position[0], s.position[1] + 2, s.position[2]]} rotation={[0, s.rotation, 0]} castShadow receiveShadow>
+                            <boxGeometry args={[4, 4, 0.2]} />
+                            <meshStandardMaterial color="#8d6e63" />
+                        </mesh>
+                    );
+                } else if (s.type === 'floor') {
+                    return (
+                        <mesh key={s.id} position={[s.position[0], s.position[1] + 0.1, s.position[2]]} rotation={[0, s.rotation, 0]} receiveShadow>
+                            <boxGeometry args={[4, 0.2, 4]} />
+                            <meshStandardMaterial color="#5d4037" />
+                        </mesh>
+                    );
+                } else if (s.type === 'ramp') {
+                    return (
+                        <mesh key={s.id} position={[s.position[0], s.position[1] + 1, s.position[2]]} rotation={[Math.PI / 8, s.rotation, 0]} castShadow receiveShadow>
+                            <boxGeometry args={[4, 0.2, 5]} />
+                            <meshStandardMaterial color="#6d4c41" />
+                        </mesh>
+                    );
+                } else {
+                    // Default Shelter/Box
+                    return (
+                        <mesh key={s.id} position={s.position}>
+                            <boxGeometry args={[1, 1, 1]} />
+                            <meshStandardMaterial color="orange" />
+                        </mesh>
+                    )
+                }
+            })}
+        </group>
+    )
+}
+
+export const World = () => {
+    return (
+        <group>
+            <Ground />
+            <Trees />
+            <ObjectSpawner />
+            <Structures />
+            {/* Spawn a few enemies */}
+            <Enemy position={[10, 2, 10]} />
+            <Enemy position={[-15, 2, -15]} />
+        </group>
+    );
+};
