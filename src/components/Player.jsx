@@ -21,43 +21,38 @@ export const Player = () => {
     const velocity = useRef([0, 0, 0]);
     useEffect(() => api.velocity.subscribe((v) => (velocity.current = v)), [api.velocity]);
 
-    // Input
-    const { move, look, actions } = useInputStore();
+    // Input - Read directly from store in loop for performance/freshness
+    const { actions } = useInputStore(); // Keep actions for useEffects
     const addStructure = useGameStore(state => state.addStructure);
     const isBuildMode = useGameStore(state => state.isBuildMode);
     const selectedBuildItem = useGameStore(state => state.selectedBuildItem);
 
-    useFrame(() => {
-        // 1. Camera Look (Mobile Joystick - look.x rotates Y, look.y rotates X) -- Simple Implementation
-        // For a proper FPP, we usually rotate the camera or the player.
-        // Here we'll rotate the camera for 'look' and apply velocity relative to camera direction.
+    // Temp vectors to avoid garbage collection
+    const frontVector = useRef(new Vector3());
+    const sideVector = useRef(new Vector3());
+    const direction = useRef(new Vector3());
 
-        // Rotate camera based on look input
-        // Scaling sensitivity
+    useFrame(() => {
+        // Read raw input
+        const { move, look } = useInputStore.getState();
+
+        // 1. Camera Look (Mobile Joystick - look.x rotates Y, look.y rotates X)
+        // Adjust sensitivity as needed
         camera.rotation.y -= look.x * 0.05;
         camera.rotation.x -= look.y * 0.05;
         camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
 
         // 2. Movement
-        // Calculate forward/right vectors relative to camera
-        const frontVector = new Vector3(0, 0, 0);
-        const sideVector = new Vector3(0, 0, 0);
-        const direction = new Vector3();
+        frontVector.current.set(0, 0, -move.y); // Forward/Back
+        sideVector.current.set(-move.x, 0, 0);  // Left/Right (Inverted x for correct strafing)
 
-        // Mapping joystick Y to forward/backward (inverted usually, but depends on lib)
-        frontVector.set(0, 0, -move.y);
-        sideVector.set(move.x, 0, 0);
-
-        direction
-            .subVectors(frontVector, sideVector)
+        direction.current
+            .subVectors(frontVector.current, sideVector.current)
             .normalize()
-            .multiplyScalar(8); // Increased Speed
+            .multiplyScalar(10) // Speed bumped to 10
+            .applyEuler(new THREE.Euler(0, camera.rotation.y, 0, 'YXZ'));
 
-        // Apply only Y rotation (Yaw) to movement so looking down doesn't push us into the ground
-        const euler = new THREE.Euler(0, camera.rotation.y, 0, 'YXZ');
-        direction.applyEuler(euler);
-
-        api.velocity.set(direction.x, velocity.current[1], direction.z);
+        api.velocity.set(direction.current.x, velocity.current[1], direction.current.z);
 
         // Sync Camera Position to Physics Body
         camera.position.copy(ref.current.position);
