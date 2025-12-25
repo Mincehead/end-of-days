@@ -6,6 +6,7 @@ import { World } from './components/World';
 import { Player } from './components/Player';
 import { UI } from './components/UI';
 import { useGameStore } from './store/gameStore';
+import { KeyboardControls } from './components/KeyboardControls';
 
 const GameLoop = () => {
   const tick = useGameStore(state => state.tick);
@@ -21,14 +22,15 @@ function App() {
       <Canvas shadows camera={{ fov: 60 }}>
         <Sky sunPosition={[0, 0, -1]} turbidity={20} rayleigh={2} mieCoefficient={0.05} mieDirectionalG={0.5} />
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-        <ambientLight intensity={0.2} />
-        <pointLight position={[10, 10, 10]} intensity={0.5} castShadow />
-        <pointLight position={[-10, 10, -10]} intensity={0.2} />
+        <ambientLight intensity={0.6} />
+        <pointLight position={[10, 10, 10]} intensity={1} castShadow />
+        <pointLight position={[-10, 10, -10]} intensity={0.5} />
 
-        {/* Spooky Fog */}
-        <fog attach="fog" args={['#101010', 0, 20]} />
+        {/* Lighter Fog */}
+        <fog attach="fog" args={['#303030', 0, 40]} />
 
         <GameLoop />
+        <KeyboardControls />
 
         <Suspense fallback={null}>
           <Physics gravity={[0, -9.81, 0]}>

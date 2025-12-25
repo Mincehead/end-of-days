@@ -9,11 +9,12 @@ import { useGameStore } from '../store/gameStore';
 export const Player = () => {
     const { camera } = useThree();
     const [ref, api] = useSphere(() => ({
-        mass: 1,
+        mass: 60, // Human weight
         type: 'Dynamic',
         position: [0, 5, 0],
         args: [1],
-        fixedRotation: true // Prevent rolling
+        fixedRotation: true,
+        linearDamping: 0.95 // Air resistance/friction substitute to stop sliding
     }));
 
     // State for velocity
@@ -50,7 +51,7 @@ export const Player = () => {
         direction
             .subVectors(frontVector, sideVector)
             .normalize()
-            .multiplyScalar(5); // Speed
+            .multiplyScalar(8); // Increased Speed
 
         // Apply only Y rotation (Yaw) to movement so looking down doesn't push us into the ground
         const euler = new THREE.Euler(0, camera.rotation.y, 0, 'YXZ');

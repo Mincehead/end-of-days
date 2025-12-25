@@ -58,8 +58,8 @@ export const useGameStore = create((set) => ({
     if (state.isDead) return {};
 
     // Decay rates
-    let newHunger = Math.max(0, state.hunger - 0.05); // Adjust speed here
-    let newThirst = Math.max(0, state.thirst - 0.08);
+    let newHunger = Math.max(0, state.hunger - 0.005); // Much slower
+    let newThirst = Math.max(0, state.thirst - 0.008);
     let newHp = state.hp;
 
     // Damage from starvation/dehydration
