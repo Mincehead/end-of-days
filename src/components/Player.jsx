@@ -62,6 +62,19 @@ export const Player = () => {
     // Handle Actions (Attack / Build / Gather)
     const { scene } = useThree();
     const raycaster = useRef(new THREE.Raycaster());
+    const rotation = useGameStore(state => state.rotation);
+    const rotateStructure = useGameStore(state => state.rotateStructure);
+
+    // Rotate binding
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key.toLowerCase() === 'r') {
+                rotateStructure();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [rotateStructure]);
 
     useEffect(() => {
         if (actions.attack) {
@@ -78,15 +91,24 @@ export const Player = () => {
                 const firstHit = intersects.find(hit => hit.distance < 4); // Melee range
 
                 if (firstHit) {
-                    const object = firstHit.object;
-                    console.log("Hit:", object.userData);
+                    // Traverse up to find the interactable object
+                    let object = firstHit.object;
+                    let foundResource = false;
 
-                    if (object.userData.type === 'resource') {
+                    while (object) {
+                        if (object.userData && object.userData.type === 'resource') {
+                            foundResource = true;
+                            break;
+                        }
+                        object = object.parent;
+                    }
+
+                    if (foundResource) {
                         // Collect resource
                         useGameStore.getState().addItem(object.userData.resourceType, 1);
                         console.log("Collected " + object.userData.resourceType);
-                        // In a real game, we'd remove the object. 
-                        // For now, let's just scale it down to 0 to "hide" it (hacky but works for boilerplate)
+
+                        // Hide it
                         object.scale.set(0, 0, 0);
                     }
                 }
@@ -101,14 +123,15 @@ export const Player = () => {
     useEffect(() => {
         if (actions.build && isBuildMode) {
             // Calculate spawn position in front of player
-            const spawnPos = new Vector3(0, 0, -3).applyEuler(camera.rotation).add(camera.position);
-            // Snap to ground (simple Y fix for now)
-            spawnPos.y = 0.5;
+            const spawnPos = new Vector3(0, 0, -4).applyEuler(camera.rotation).add(camera.position); // Further out
+            // Snap to grid-ish
+            const snapX = Math.round(spawnPos.x / 2) * 2;
+            const snapZ = Math.round(spawnPos.z / 2) * 2;
 
-            addStructure([spawnPos.x, spawnPos.y, spawnPos.z], selectedBuildItem);
+            addStructure([snapX, 0, snapZ], selectedBuildItem, rotation);
             useInputStore.getState().setAction('build', false);
         }
-    }, [actions.build, isBuildMode, selectedBuildItem, camera, addStructure]);
+    }, [actions.build, isBuildMode, selectedBuildItem, camera, addStructure, rotation]);
 
 
     return (

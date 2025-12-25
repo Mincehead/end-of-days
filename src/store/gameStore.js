@@ -9,12 +9,15 @@ const initialState = {
   isDead: false,
   inventory: {
     scrap: 0,
+    stone: 0,
     wood: 0,
     water: 0,
   },
   structures: [],
   isBuildMode: false,
-  selectedBuildItem: 'shelter',
+  selectedBuildItem: 'wall', // 'wall', 'floor', 'shelter'
+  rotation: 0, // Building rotation in radians
+  time: 8, // Start at 8 AM
 };
 
 export const useGameStore = create((set) => ({
@@ -43,14 +46,16 @@ export const useGameStore = create((set) => ({
 
   // Building State
   isBuildMode: false,
-  selectedBuildItem: 'shelter', // 'shelter', 'fire'
+  selectedBuildItem: 'wall',
+  rotation: 0,
   toggleBuildMode: () => set((state) => ({ isBuildMode: !state.isBuildMode })),
   setBuildItem: (item) => set({ selectedBuildItem: item }),
+  rotateStructure: () => set((state) => ({ rotation: state.rotation + Math.PI / 2 })),
 
   // Structures World Data
   structures: [],
-  addStructure: (position, type) => set((state) => ({
-    structures: [...state.structures, { id: uuidv4(), position, type }]
+  addStructure: (position, type, rotation) => set((state) => ({
+    structures: [...state.structures, { id: uuidv4(), position, type, rotation: rotation || state.rotation }]
   })),
 
   // Game Loop
@@ -62,6 +67,13 @@ export const useGameStore = create((set) => ({
     let newThirst = Math.max(0, state.thirst - 0.008);
     let newHp = state.hp;
 
+    // Time Logic (0-24 cycle)
+    // 0.01 per tick @ 60fps = 0.6 per sec = 36 game-seconds per real-second
+    // Full day = ~40 seconds real time (Method A: fast day)
+    // Let's go slower: 0.005 -> ~80s day
+    let newTime = state.time + 0.005;
+    if (newTime >= 24) newTime = 0;
+
     // Damage from starvation/dehydration
     if (newHunger === 0 || newThirst === 0) {
       newHp = Math.max(0, state.hp - 0.1);
@@ -71,7 +83,8 @@ export const useGameStore = create((set) => ({
       hunger: newHunger,
       thirst: newThirst,
       hp: newHp,
-      isDead: newHp === 0
+      isDead: newHp === 0,
+      time: newTime
     };
   }),
 

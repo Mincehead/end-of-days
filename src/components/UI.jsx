@@ -47,9 +47,36 @@ export const UI = () => {
                 <div style={{ marginTop: 20 }}>
                     <p>Scrap: {inventory.scrap}</p>
                     <p>Wood: {inventory.wood}</p>
+                    <p>Stone: {inventory.stone}</p>
                     <p>Water: {inventory.water}</p>
                 </div>
             </div>
+
+            {/* Build Menu - Centered Bottom */}
+            {isBuildMode && (
+                <div style={{
+                    position: 'absolute', bottom: 120, left: '50%', transform: 'translateX(-50%)',
+                    display: 'flex', gap: '10px', pointerEvents: 'auto', background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '10px'
+                }}>
+                    {['wall', 'floor', 'ramp'].map(item => (
+                        <button
+                            key={item}
+                            onClick={() => useGameStore.getState().setBuildItem(item)}
+                            style={{
+                                padding: '10px 20px',
+                                background: useGameStore.getState().selectedBuildItem === item ? 'orange' : '#555',
+                                color: 'white', border: '1px solid white', borderRadius: '5px', cursor: 'pointer', textTransform: 'uppercase'
+                            }}
+                        >
+                            {item}
+                        </button>
+                    ))}
+                    <div style={{ color: 'white', display: 'flex', alignItems: 'center', marginLeft: 10, fontSize: '0.8rem' }}>
+                        [R] Rotate
+                    </div>
+                </div>
+            )}
+
 
             {/* Action Buttons */}
             <div style={{ position: 'absolute', bottom: 120, right: 20, display: 'flex', flexDirection: 'column', gap: '10px', pointerEvents: 'auto' }}>
@@ -63,7 +90,7 @@ export const UI = () => {
                         border: '2px solid white'
                     }}
                 >
-                    {isBuildMode ? 'CANCEL' : 'BUILD'}
+                    {isBuildMode ? 'X' : 'BUILD'}
                 </button>
 
                 {isBuildMode && (
